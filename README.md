@@ -1,24 +1,15 @@
-# energy-n14-e13-mtt-squat-control
+<!--
+ * @Author      : Mr.bin
+ * @Date        : 2023-04-14 15:24:17
+ * @LastEditTime: 2023-04-14 16:31:52
+ * @Description : energy-n14-e13-mtt-squat-control
+-->
 
-## Project setup
-```
-npm install
-```
+# 下蹲与控制反馈系统训练仪软件-MTT 版
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+## 基本设备信息
 
-### Compiles and minifies for production
-```
-npm run build
-```
+左 K 值：101.73
+右 K 值：99.368
 
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+传感器量程：0~500kg
