@@ -1,7 +1,7 @@
 /*
  * @Author      : Mr.bin
  * @Date        : 2021-09-10 17:55:37
- * @LastEditTime: 2023-04-14 17:25:04
+ * @LastEditTime: 2023-05-17 16:29:39
  * @Description : 日志记录
  */
 import log4js from 'log4js'
@@ -11,7 +11,7 @@ log4js.configure({
     production: {
       type: 'dateFile', // 日志输出类型，dateFile表示输出到文件
       filename:
-        'C:/Energy_Life_Log/下蹲与控制反馈系统训练仪软件-MTT版[v1.0.0].log', // 输出到文件的文件路径，注意，是路径而不是文件名
+        'C:/Energy_Life_Log/下蹲与控制反馈系统训练仪-MTT版.log', // 输出到文件的文件路径，注意，是路径而不是文件名
       alwaysIncludePattern: true, // 日志文件是否展示预设的模式
       keepFileExt: true, // 日志文件是否始终保持后缀
       daysToKeep: 0 // 日志保留几天，默认值为0，表示永久保存

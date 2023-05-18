@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2022-07-28 10:25:39
- * @LastEditTime: 2023-04-27 17:08:12
+ * @LastEditTime: 2023-05-18 11:34:05
  * @Description : 顶部栏
 -->
 <template>
@@ -48,7 +48,7 @@
 
     <!-- logo -->
     <div class="logo">
-      <span class="text">下蹲与控制反馈系统训练仪软件-MTT版 v1.0.0</span>
+      <span class="text">下蹲与控制反馈系统训练仪</span>
       <el-image class="logo__img" :src="logoSrc" fit="scale-down"></el-image>
     </div>
 
