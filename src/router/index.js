@@ -1,7 +1,7 @@
 /*
  * @Author      : Mr.bin
  * @Date        : 2023-04-14 15:23:55
- * @LastEditTime: 2023-04-28 17:17:01
+ * @LastEditTime: 2023-06-08 14:09:53
  * @Description : 路由
  */
 import Vue from 'vue'
@@ -66,6 +66,13 @@ const routes = [
       },
 
       /* 评估 */
+      // 评估数据统一发送页面
+      {
+        path: 'test-send',
+        name: 'test-send',
+        component: () => import('@/views/test-mode/test-send'),
+        meta: ['评估数据统一发送页面']
+      },
       // 精准负重测试-具体测量
       {
         path: 'precision-weight-measure',
@@ -79,6 +86,36 @@ const routes = [
         name: 'standing-stability-measure',
         component: () => import('@/views/test-mode/standing-stability/measure'),
         meta: ['站立稳定测试-具体测量']
+      },
+      // 站立平衡测试-具体测量
+      {
+        path: 'standing-balance-measure',
+        name: 'standing-balance-measure',
+        component: () => import('@/views/test-mode/standing-balance/measure'),
+        meta: ['站立平衡测试-具体测量']
+      },
+      // 静蹲测试-具体测量
+      {
+        path: 'quiet-squat-down-measure',
+        name: 'quiet-squat-down-measure',
+        component: () => import('@/views/test-mode/quiet-squat-down/measure'),
+        meta: ['静蹲测试-具体测量']
+      },
+      // 动态下蹲测试-具体测量
+      {
+        path: 'dynamic-squat-measure',
+        name: 'dynamic-squat-measure',
+        component: () => import('@/views/test-mode/dynamic-squat/measure'),
+        meta: ['动态下蹲测试-具体测量']
+      },
+
+      /* 训练 */
+      // 训练数据统一发送页面
+      {
+        path: 'train-send',
+        name: 'train-send',
+        component: () => import('@/views/train-mode/train-send'),
+        meta: ['训练数据统一发送页面']
       }
     ]
   },

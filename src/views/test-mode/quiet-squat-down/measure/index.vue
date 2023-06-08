@@ -1,11 +1,11 @@
 <!--
  * @Author      : Mr.bin
- * @Date        : 2023-04-28 17:17:36
- * @LastEditTime: 2023-06-08 11:35:39
- * @Description : 站立稳定测试-具体测量
+ * @Date        : 2023-06-08 11:21:04
+ * @LastEditTime: 2023-06-08 11:44:03
+ * @Description : 静蹲测试-具体测量
 -->
 <template>
-  <div class="standing-stability-measure">
+  <div class="quiet-squat-down-measure">
     <!-- 语音播放 -->
     <audio ref="audio" controls="controls" hidden :src="audioSrc" />
 
@@ -14,17 +14,14 @@
       <el-page-header
         class="page"
         title="退出订单"
-        content="站立稳定测试"
+        content="静蹲测试"
         @back="handleExit"
       ></el-page-header>
 
       <!-- 介绍说明 -->
       <div class="introduce">
         <div class="item">
-          测试目的：是否可以在视觉反馈的指导下，维持稳定站立
-        </div>
-        <div class="item">
-          执行动作：根据画面提示，主动调整重心，使滑块保持在绿色区域内
+          请双脚平稳站立在踏板上，保持一定的下蹲角度，使滑块保持在绿色区域内，可选择睁眼/闭眼进行测试。
         </div>
       </div>
 
@@ -66,10 +63,10 @@
       <!-- 按钮组 -->
       <div class="btn">
         <el-button
-          class="item"
           type="primary"
           @click="handleStart"
           :disabled="isStart"
+          class="item"
           >开始测量</el-button
         >
         <el-button
@@ -104,13 +101,13 @@ import Readline from '@serialport/parser-readline'
 import { analyzeTestResult } from '@/utils/analyze-test-result.js'
 
 export default {
-  name: 'standing-stability-measure',
+  name: 'quiet-squat-down-measure',
 
   data() {
     return {
       /* 语音相关 */
       audioOpen: this.$store.state.voiceSwitch,
-      audioSrc: path.join(__static, `narrate/mandarin/Test/站立稳定测试.mp3`),
+      audioSrc: path.join(__static, `narrate/mandarin/Test/静蹲测试.mp3`),
 
       timeBgSrc: require('@/assets/img/Test/Measure/倒计时背景.png'),
 
@@ -363,7 +360,7 @@ export default {
 
       /* 数据 */
       const obj = {
-        pattern: '站立稳定测试',
+        pattern: '静蹲测试',
         side: this.affectedSide, // 患侧（左腿、右腿）
         leftWeightArray: JSON.stringify(this.leftWeightArray), // 左侧负重数组
         rightWeightArray: JSON.stringify(this.rightWeightArray), // 右侧负重数组
@@ -433,7 +430,7 @@ export default {
       this.$router.push({
         path: '/refresh',
         query: {
-          routerName: JSON.stringify('/standing-stability-measure'),
+          routerName: JSON.stringify('/quiet-squat-down-measure'),
           duration: JSON.stringify(300)
         }
       })
@@ -443,7 +440,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.standing-stability-measure {
+.quiet-squat-down-measure {
   width: 100%;
   height: 100%;
   @include flex(row, center, center);

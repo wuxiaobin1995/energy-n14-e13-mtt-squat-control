@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2023-04-14 17:56:34
- * @LastEditTime: 2023-04-28 17:09:32
+ * @LastEditTime: 2023-06-08 14:45:14
  * @Description : home
 -->
 <template>
@@ -137,10 +137,13 @@ export default {
     setOrderID(order_id) {
       this.fullscreenLoading = true
       this.$axios
-        .post('/getOrderIDMessage', {
-          order_id: order_id,
-          device_type: 'SquatControl'
-        })
+        .post(
+          `//192.168.1.150/energy_t6_m5_mtt/public/index.php/base/getOrderIDMessage`,
+          {
+            order_id: order_id,
+            device_type: 'SquatControl'
+          }
+        )
         .then(res => {
           console.log('后端返回的源数据：\n', res)
           const data = res.data
