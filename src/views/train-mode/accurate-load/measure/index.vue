@@ -1,11 +1,11 @@
 <!--
  * @Author      : Mr.bin
- * @Date        : 2023-06-08 11:21:04
- * @LastEditTime: 2023-06-09 15:20:53
- * @Description : 静蹲测试-具体测量
+ * @Date        : 2023-06-09 16:56:39
+ * @LastEditTime: 2023-06-10 09:46:27
+ * @Description : 精准负重训练-具体测量
 -->
 <template>
-  <div class="quiet-squat-down-measure">
+  <div class="accurate-load-measure">
     <!-- 语音播放 -->
     <audio ref="audio" controls="controls" hidden :src="audioSrc" />
 
@@ -14,16 +14,19 @@
       <el-page-header
         class="page"
         title="退出订单"
-        content="静蹲测试"
+        content="精准负重训练"
         @back="handleExit"
       ></el-page-header>
 
       <!-- 介绍说明 -->
       <div class="introduce">
         <div class="item">
-          请双脚平稳站立在踏板上，保持一定的下蹲角度，使滑块保持在绿色区域内，可选择睁眼/闭眼进行测试。
+          执行动作：身体重量转移到患肢，将重心逐渐移动到绿色区域内
         </div>
       </div>
+
+      <!-- 超出极限警告 -->
+      <div class="warn" v-show="isWarnShow">警告，患侧负重超出安全值！</div>
 
       <!-- 重心偏移 -->
       <div class="center">
@@ -33,11 +36,14 @@
         </div>
         <div class="center-c">
           <div class="center-num">
-            <div class="center-num-0">100%</div>
-            <div class="center-num-50">50%</div>
-            <div class="center-num-100">100%</div>
+            <div class="center-num-l">
+              {{ this.affectedSide === '左腿' ? '100%' : '0%' }}
+            </div>
+            <div class="center-num-r">
+              {{ this.affectedSide === '左腿' ? '0%' : '100%' }}
+            </div>
           </div>
-          <div class="center-bg"></div>
+          <div class="center-bg" :style="colorObj"></div>
           <el-slider
             class="center-core"
             v-model="core"
@@ -51,12 +57,29 @@
         </div>
       </div>
 
-      <!-- 倒计时 -->
-      <div class="count-down">
-        <div class="box">
+      <!-- 参数 -->
+      <div class="set">
+        <!-- 患侧 -->
+        <div class="item">
+          <el-image class="img" :src="timeBgSrc" fit="scale-down"></el-image>
+          <div class="text">患侧</div>
+          <div class="value">
+            {{ this.affectedSide }}
+          </div>
+        </div>
+
+        <!-- 倒计时 -->
+        <div class="item">
           <el-image class="img" :src="timeBgSrc" fit="scale-down"></el-image>
           <div class="text">倒计时</div>
           <div class="value">{{ nowTime }}</div>
+        </div>
+
+        <!-- 患侧极限负重 -->
+        <div class="item">
+          <el-image class="img" :src="timeBgSrc" fit="scale-down"></el-image>
+          <div class="text">负重%</div>
+          <div class="value">{{ ultimateLoad }}</div>
         </div>
       </div>
 
@@ -64,10 +87,10 @@
       <div class="btn">
         <el-button
           class="item"
-          type="primary"
-          @click="handleStart"
+          type="success"
           :disabled="isStart"
-          >开始测量</el-button
+          @click="handleStart"
+          >开始训练</el-button
         >
         <el-button
           class="item"
@@ -89,44 +112,59 @@ import path from 'path'
 import SerialPort from 'serialport'
 import Readline from '@serialport/parser-readline'
 
-import { analyzeTestResult } from '@/utils/analyze-test-result.js'
-
 export default {
-  name: 'quiet-squat-down-measure',
+  name: 'accurate-load-measure',
 
   data() {
     return {
       /* 语音相关 */
       audioOpen: this.$store.state.voiceSwitch,
-      audioSrc: path.join(__static, `narrate/mandarin/Test/静蹲测试.mp3`),
+      audioSrc: path.join(__static, `narrate/mandarin/Train/精准负重训练.mp3`),
 
-      timeBgSrc: require('@/assets/img/Test/Measure/倒计时背景.png'),
+      timeBgSrc: require('@/assets/img/Train/Measure/倒计时背景.png'),
+
+      /* 按钮禁用控制 */
+      isStart: false,
+      isWarnShow: false,
 
       /* 串口相关变量 */
       usbPort: null,
       parser: null,
       scmBaudRate: 115200, // 默认波特率115200
 
-      /* 控制类 */
-      isStart: false, // 是否开始
-
       /* 其他 */
-      timeClock: null, // 计时器
-      time: this.$store.state.settings[0].time, // 倒计时
-      nowTime: this.$store.state.settings[0].time, // 实时倒计时
-
       leftK: 0, // 左K
       rightK: 0, // 右K
       leftStandard: 0, // 左调零值
       rightStandard: 0, // 右调零值
-      affectedSide: this.$store.state.settings[0].side, // 患侧
+
+      timeClock: null, // 计时器
+      time: this.$store.state.settings[0].time, // 倒计时
+      nowTime: this.$store.state.settings[0].time, // 实时倒计时
 
       leftWeight: 0, // 左负重（kg），精确到0.1kg
       rightWeight: 0, // 右负重（kg），精确到0.1kg
       leftWeightArray: [], // 左负重数组
       rightWeightArray: [], // 右负重数组
+      affectedSide: this.$store.state.settings[0].side, // 患侧
+      ultimateLoad: this.$store.state.settings[0].ultimateLoad, // 患侧极限负重%
 
-      core: 50 // 重心偏移值
+      upArr: [], // 上限极限曲线数组
+      ultimateLoadArr: [], // 极限曲线数组
+      downArr: [], // 下限极限曲线数组
+
+      core: 50, // 重心偏移值
+      colorObj: {
+        'background-image': `linear-gradient(
+          to right,
+          rgba(255, 255, 0, 0.5),
+          rgba(255, 255, 0, 0.5) 47.5%,
+          rgba(0, 128, 0, 0.5) 47.5%,
+          rgba(0, 128, 0, 0.5) 52.5%,
+          rgba(255, 255, 0, 0.5) 52.5%,
+          rgba(255, 255, 0, 0.5) 100%
+        )`
+      }
     }
   },
 
@@ -136,6 +174,7 @@ export default {
     this.leftStandard = this.$store.state.zeroStandard.leftStandard
     this.rightStandard = this.$store.state.zeroStandard.rightStandard
 
+    this.initColor()
     this.initSerialPort()
   },
   mounted() {
@@ -186,6 +225,37 @@ export default {
     },
 
     /**
+     * @description: 颜色块初始化
+     */
+    initColor() {
+      if (this.affectedSide === '右腿') {
+        this.colorObj = {
+          'background-image': `linear-gradient(
+            to right,
+            rgba(255, 255, 0, 0.5),
+            rgba(255, 255, 0, 0.5) ${this.ultimateLoad - 2.5}%,
+            rgba(0, 128, 0, 0.5) ${this.ultimateLoad - 2.5}%,
+            rgba(0, 128, 0, 0.5) ${this.ultimateLoad + 2.5}%,
+            rgba(255, 255, 0, 0.5) ${this.ultimateLoad + 2.5}%,
+            rgba(255, 255, 0, 0.5) 100%
+          )`
+        }
+      } else {
+        this.colorObj = {
+          'background-image': `linear-gradient(
+            to right,
+            rgba(255, 255, 0, 0.5),
+            rgba(255, 255, 0, 0.5) ${100 - this.ultimateLoad - 2.5}%,
+            rgba(0, 128, 0, 0.5) ${100 - this.ultimateLoad - 2.5}%,
+            rgba(0, 128, 0, 0.5) ${100 - this.ultimateLoad + 2.5}%,
+            rgba(255, 255, 0, 0.5) ${100 - this.ultimateLoad + 2.5}%,
+            rgba(255, 255, 0, 0.5) 100%
+          )`
+        }
+      }
+    },
+
+    /**
      * @description: 初始化串口对象
      */
     initSerialPort() {
@@ -216,7 +286,7 @@ export default {
             /* 调用 this.usbPort.open() 失败时触发（开启串口失败） */
             this.usbPort.on('error', () => {
               this.$alert(
-                `请重新连接USB线，然后点击"刷新页面"按钮，重新测试！`,
+                `请重新连接USB线，然后点击"刷新页面"按钮！`,
                 '串口开启失败',
                 {
                   type: 'error',
@@ -253,30 +323,50 @@ export default {
               if (this.rightWeight < 0) {
                 this.rightWeight = 0
               }
+
               /* 数据校验 */
               if (!isNaN(this.leftWeight) && !isNaN(this.rightWeight)) {
-                if (this.leftWeight + this.rightWeight !== 0) {
-                  this.core = parseInt(
-                    (
-                      (this.rightWeight /
-                        (this.leftWeight + this.rightWeight)) *
-                      100
-                    ).toFixed(0)
-                  )
-                } else {
-                  this.core = 50
-                }
+                /* 过滤掉突变值 */
+                if (this.leftWeight <= 500 && this.rightWeight <= 500) {
+                  if (this.leftWeight + this.rightWeight !== 0) {
+                    this.core = parseInt(
+                      (
+                        (this.rightWeight /
+                          (this.leftWeight + this.rightWeight)) *
+                        100
+                      ).toFixed(0)
+                    )
+                  } else {
+                    this.core = 50
+                  }
 
-                if (this.isStart) {
-                  this.leftWeightArray.push(this.leftWeight)
-                  this.rightWeightArray.push(this.rightWeight)
+                  /* 数据插入数组中 */
+                  if (this.isStart) {
+                    this.leftWeightArray.push(this.leftWeight)
+                    this.rightWeightArray.push(this.rightWeight)
+
+                    /* 极限超出提示 */
+                    if (this.affectedSide === '右腿') {
+                      if (this.core > this.ultimateLoad + 2.5) {
+                        this.isWarnShow = true
+                      } else {
+                        this.isWarnShow = false
+                      }
+                    } else {
+                      if (100 - this.core > this.ultimateLoad + 2.5) {
+                        this.isWarnShow = true
+                      } else {
+                        this.isWarnShow = false
+                      }
+                    }
+                  }
                 }
               }
             })
           } else {
             this.$getLogger('没有检测到USB连接')
             this.$alert(
-              `请重新连接USB线，然后点击"刷新页面"按钮，重新测试！`,
+              `请重新连接USB线，然后点击"刷新页面"按钮！`,
               '没有检测到USB连接',
               {
                 type: 'error',
@@ -293,8 +383,8 @@ export default {
         .catch(err => {
           this.$getLogger(err)
           this.$alert(
-            `${err}。请重新连接USB线，然后点击"刷新页面"按钮，重新测试！`,
-            `初始化SerialPort.list失败`,
+            `${err}。请重新连接USB线，然后点击"刷新页面"按钮！`,
+            '初始化SerialPort.list失败',
             {
               type: 'error',
               showClose: false,
@@ -309,14 +399,13 @@ export default {
     },
 
     /**
-     * @description: 开始按钮
+     * @description: 开始测量按钮
      */
     handleStart() {
       this.isStart = true
       this.nowTime = this.time
       this.leftWeightArray = []
       this.rightWeightArray = []
-      this.core = 50
 
       this.timeClock = setInterval(() => {
         this.nowTime -= 1
@@ -335,28 +424,64 @@ export default {
         clearInterval(this.timeClock)
       }
 
-      // 计算某些值
-      const res = {
-        leftWeightArray: this.leftWeightArray,
-        rightWeightArray: this.rightWeightArray
+      // 计算完成度
+      for (let i = 0; i < this.leftWeightArray.length; i++) {
+        this.upArr.push(parseFloat((this.ultimateLoad + 2.5).toFixed(1)))
+        this.ultimateLoadArr.push(this.ultimateLoad)
+        this.downArr.push(parseFloat((this.ultimateLoad - 2.5).toFixed(1)))
       }
-      const result = analyzeTestResult(res)
+      const yesArr = []
+      for (let i = 0; i < this.leftWeightArray.length; i++) {
+        let core = 0
+        if (this.affectedSide === '左腿') {
+          core = parseInt(
+            (
+              (this.leftWeightArray[i] /
+                (this.leftWeightArray[i] + this.rightWeightArray[i])) *
+              100
+            ).toFixed(0)
+          )
+        } else {
+          core =
+            100 -
+            parseInt(
+              (this.leftWeightArray[i] /
+                (this.leftWeightArray[i] + this.rightWeightArray[i])) *
+                100
+            )
+        }
 
-      /* 删除Vuex参数配置数组的第一个元素 */
+        if (!core) {
+          core = 50
+        }
+        if (core >= this.downArr[i] && core <= this.upArr[i]) {
+          yesArr.push(1)
+        }
+      }
+      const record = parseInt(
+        ((yesArr.length / this.leftWeightArray.length) * 100).toFixed(0)
+      )
+        ? parseInt(
+            ((yesArr.length / this.leftWeightArray.length) * 100).toFixed(0)
+          )
+        : 0
+
+      /* 删除 Vuex 参数配置数组的第一个元素 */
       let settings = JSON.parse(JSON.stringify(this.$store.state.settings))
       settings.shift()
       this.$store.dispatch('setSettings', settings).then(() => {
         /* 数据 */
         const obj = {
-          pattern: '静蹲测试',
+          pattern: '精准负重训练',
           side: this.affectedSide, // 患侧（左腿、右腿）
           leftWeightArray: JSON.stringify(this.leftWeightArray), // 左侧负重数组
           rightWeightArray: JSON.stringify(this.rightWeightArray), // 右侧负重数组
-          leftAverageWeight: result.leftAverageWeight, // 左侧负重平均值
-          rightAverageWeight: result.rightAverageWeight, // 右侧负重平均值
-          leftAverageWeightPercent: result.leftAverageWeightPercent, // 左侧负重平均百分比
-          rightAverageWeightPercent: result.rightAverageWeightPercent, // 右侧负重平均百分比
-          trajectoryArray: JSON.stringify(result.rightWeightPercentArray) // 重心曲线图轨迹数组
+          upArr: JSON.stringify(this.upArr), // 上限数组
+          downArr: JSON.stringify(this.downArr), // 下限数组
+          ultimateLoad: this.ultimateLoad, // 极限负重百分比%
+          time: this.time, // 训练时长
+          record: record, // 完成度%
+          ultimateLoadArr: JSON.stringify(this.ultimateLoadArr) // 曲线图轨迹数组
         }
 
         /* 暂存至 sessionStorage */
@@ -401,20 +526,17 @@ export default {
         // 下一项
         let route = ''
         switch (this.$store.state.settings[0].pattern) {
-          case '精准负重测试':
-            route = 'precision-weight-measure'
+          case '坐站训练':
+            route = 'sit-stand-measure'
             break
-          case '站立稳定测试':
-            route = 'standing-stability-measure'
+          case '精准负重训练':
+            route = 'accurate-load-measure'
             break
-          case '站立平衡测试':
-            route = 'standing-balance-measure'
+          case '重心转移训练':
+            route = 'barycenter-transfer-measure'
             break
-          case '静蹲测试':
-            route = 'quiet-squat-down-measure'
-            break
-          case '动态下蹲测试':
-            route = 'dynamic-squat-measure'
+          case '下蹲动作训练':
+            route = 'squat-measure'
             break
           default:
             break
@@ -426,7 +548,7 @@ export default {
       } else {
         // 完成订单
         this.$router.push({
-          path: '/test-send'
+          path: '/train-send'
         })
       }
     },
@@ -438,7 +560,7 @@ export default {
       this.$router.push({
         path: '/refresh',
         query: {
-          routerName: JSON.stringify('/quiet-squat-down-measure'),
+          routerName: JSON.stringify('/accurate-load-measure'),
           duration: JSON.stringify(300)
         }
       })
@@ -448,7 +570,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.quiet-squat-down-measure {
+.accurate-load-measure {
   width: 100%;
   height: 100%;
   @include flex(row, center, center);
@@ -465,7 +587,7 @@ export default {
     .page {
       position: absolute;
       top: 15px;
-      left: 20px;
+      left: 30px;
     }
 
     /* 介绍说明 */
@@ -477,6 +599,15 @@ export default {
         font-size: 22px;
         margin-bottom: 5px;
       }
+    }
+
+    /* 超出极限警告 */
+    .warn {
+      @include flex(row, center, center);
+      color: red;
+      font-size: 20px;
+      font-weight: 700;
+      margin-top: 10px;
     }
 
     /* 重心偏移 */
@@ -511,19 +642,6 @@ export default {
           float: left;
           width: 100%;
           height: 60px;
-          background-image: linear-gradient(
-            to right,
-            rgba(255, 0, 0, 0.5),
-            rgba(255, 0, 0, 0.5) 40%,
-            rgba(255, 255, 0, 0.5) 40%,
-            rgba(255, 255, 0, 0.5) 47.5%,
-            rgba(0, 128, 0, 0.5) 47.5%,
-            rgba(0, 128, 0, 0.5) 52.5%,
-            rgba(255, 255, 0, 0.5) 52.5%,
-            rgba(255, 255, 0, 0.5) 60%,
-            rgba(255, 0, 0, 0.5) 60%,
-            rgba(255, 0, 0, 0.5) 100%
-          );
         }
         .center-core {
           padding-top: 10px;
@@ -547,33 +665,36 @@ export default {
       }
     }
 
-    /* 倒计时 */
-    .count-down {
-      @include flex(row, center, center);
-      margin-bottom: 80px;
-      .box {
+    /* 参数 */
+    .set {
+      @include flex(row, space-around, center);
+      margin-bottom: 60px;
+      .item {
         position: relative;
-        @include flex(row, center, center);
+        @include flex(column, center, center);
+        transform: scale(0.8);
         .img {
-          width: 100%;
+          transform: scale(1.3);
         }
         .text {
           position: absolute;
-          top: 25px;
-          font-size: 20px;
+          top: 3%;
+          left: 50%;
+          transform: translateX(-50%);
           color: #ffffff;
+          font-size: 20px;
         }
         .value {
           position: absolute;
-          top: 32%;
-          font-size: 60px;
+          color: #ffffff;
+          font-size: 80px;
         }
       }
     }
 
     /* 按钮组 */
     .btn {
-      margin-bottom: 20px;
+      margin-bottom: 30px;
       @include flex(row, center, center);
       .item {
         font-size: 34px;

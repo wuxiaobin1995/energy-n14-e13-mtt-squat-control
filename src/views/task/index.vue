@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2023-04-26 17:18:16
- * @LastEditTime: 2023-06-08 09:37:15
+ * @LastEditTime: 2023-06-09 16:46:57
  * @Description : 任务详情页
 -->
 <template>
@@ -205,7 +205,7 @@ export default {
         }
       }
 
-      console.log(settingsRouter)
+      // console.log(settingsRouter)
       this.$router.push({
         path: '/' + settingsRouter[0]
       })

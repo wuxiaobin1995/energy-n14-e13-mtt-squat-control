@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2023-04-28 17:17:36
- * @LastEditTime: 2023-06-08 11:10:09
+ * @LastEditTime: 2023-06-09 11:15:24
  * @Description : 精准负重测试-具体测量
 -->
 <template>
@@ -68,17 +68,6 @@
               <template slot="prepend">3</template>
             </el-input>
           </div>
-          <!-- 完成 -->
-          <el-button
-            class="confirm-btn"
-            type="success"
-            round
-            :disabled="testValueArray.length != 3"
-            @click="handleFinish"
-            >{{
-              testValueArray.length === 3 ? '完 成' : '进行中...'
-            }}</el-button
-          >
         </div>
 
         <!-- 其他按钮组 -->
@@ -436,21 +425,18 @@ export default {
 
           this.isStart = false
 
+          // 完成项目
           if (this.testValueArray.length === 3) {
-            this.$message({
-              message: `提示，请点击“完 成”按钮`,
-              type: 'success',
-              duration: 3000
-            })
+            this.finishData()
           }
         }
       }
     },
 
     /**
-     * @description: 完成按钮
+     * @description: 完成该项目
      */
-    handleFinish() {
+    finishData() {
       /* 该项目最终测量结果（取三次的最大值），kg */
       const testResult = Math.max(...this.testValueArray)
 
@@ -487,74 +473,74 @@ export default {
         /* 删除Vuex参数配置数组的第一个元素 */
         let settings = JSON.parse(JSON.stringify(this.$store.state.settings))
         settings.shift()
-        this.$store.dispatch('setSettings', settings)
+        this.$store.dispatch('setSettings', settings).then(() => {
+          /* 数据 */
+          const obj = {
+            pattern: '精准负重测试',
+            side: this.affectedSide, // 患侧（左腿、右腿）
+            dataArray: JSON.stringify(this.testValueArray), // 测量结果数组，转JSON格式
+            ultimateLoad: testResult // 极限负重（kg）
+          }
 
-        /* 数据 */
-        const obj = {
-          pattern: '精准负重测试',
-          side: this.affectedSide, // 患侧（左腿、右腿）
-          dataArray: JSON.stringify(this.testValueArray), // 测量结果数组，转JSON格式
-          ultimateLoad: testResult // 极限负重
-        }
+          /* 暂存至 sessionStorage */
+          let resultArray = JSON.parse(
+            window.sessionStorage.getItem('resultArray')
+          )
+          resultArray.push(obj)
+          window.sessionStorage.setItem(
+            'resultArray',
+            JSON.stringify(resultArray)
+          )
 
-        /* 暂存至 sessionStorage */
-        let resultArray = JSON.parse(
-          window.sessionStorage.getItem('resultArray')
-        )
-        resultArray.push(obj)
-        window.sessionStorage.setItem(
-          'resultArray',
-          JSON.stringify(resultArray)
-        )
+          /* 若后面还有项目，跳到下一项 */
+          if (this.$store.state.settings.length) {
+            this.$alert(`请点击“下一项”按钮，进行后续项目`, '完成', {
+              type: 'success',
+              showClose: false,
+              center: true,
+              confirmButtonText: '下一项',
+              callback: () => {
+                let route = ''
+                switch (this.$store.state.settings[0].pattern) {
+                  case '精准负重测试':
+                    route = 'precision-weight-measure'
+                    break
+                  case '站立稳定测试':
+                    route = 'standing-stability-measure'
+                    break
+                  case '站立平衡测试':
+                    route = 'standing-balance-measure'
+                    break
+                  case '静蹲测试':
+                    route = 'quiet-squat-down-measure'
+                    break
+                  case '动态下蹲测试':
+                    route = 'dynamic-squat-measure'
+                    break
+                  default:
+                    break
+                }
 
-        /* 若后面还有项目，跳到下一项 */
-        if (this.$store.state.settings.length) {
-          this.$alert(`请点击“下一项”按钮，进行后续项目`, '完成', {
-            type: 'success',
-            showClose: false,
-            center: true,
-            confirmButtonText: '下一项',
-            callback: () => {
-              let route = ''
-              switch (this.$store.state.settings[0].pattern) {
-                case '精准负重测试':
-                  route = 'precision-weight-measure'
-                  break
-                case '站立稳定测试':
-                  route = 'standing-stability-measure'
-                  break
-                case '站立平衡测试':
-                  route = 'standing-balance-measure'
-                  break
-                case '静蹲测试':
-                  route = 'quiet-squat-down-measure'
-                  break
-                case '动态下蹲测试':
-                  route = 'dynamic-squat-measure'
-                  break
-                default:
-                  break
+                this.$router.push({
+                  path: '/' + route
+                })
               }
-
-              this.$router.push({
-                path: '/' + route
-              })
-            }
-          })
-        } else {
-          /* 若后面没有项目，跳转至数据统一发送页面 */
-          this.$alert(`请点击“完成”按钮，实现数据上传`, '完成', {
-            type: 'success',
-            showClose: false,
-            center: true,
-            confirmButtonText: '完 成',
-            callback: () => {
-              this.$router.push({
-                path: '/test-send'
-              })
-            }
-          })
-        }
+            })
+          } else {
+            /* 若后面没有项目，跳转至数据统一发送页面 */
+            this.$alert(`请点击“完成”按钮，实现数据上传`, '完成', {
+              type: 'success',
+              showClose: false,
+              center: true,
+              confirmButtonText: '完 成',
+              callback: () => {
+                this.$router.push({
+                  path: '/test-send'
+                })
+              }
+            })
+          }
+        })
       }
     },
 
@@ -632,7 +618,7 @@ export default {
           left: 50%;
           transform: translateX(-50%);
           color: #ffffff;
-          font-size: 20px;
+          font-size: 22px;
         }
         .value {
           position: absolute;
@@ -646,36 +632,29 @@ export default {
         @include flex(column, stretch, center);
         .title {
           position: absolute;
-          top: 6%;
+          top: 10%;
           color: #ffffff;
-          font-size: 28px;
+          font-size: 32px;
         }
         .item1 {
           position: absolute;
           @include flex(row, center, center);
-          top: 22%;
+          top: 30%;
         }
         .item2 {
           position: absolute;
           @include flex(row, center, center);
-          top: 40%;
+          top: 50%;
         }
         .item3 {
           position: absolute;
           @include flex(row, center, center);
-          top: 58%;
+          top: 70%;
         }
         .value {
           width: 70%;
           font-weight: 700;
           font-size: 22px;
-        }
-        .confirm-btn {
-          position: absolute;
-          @include flex(row, center, center);
-          top: 75%;
-          color: #000000;
-          font-weight: 700;
         }
       }
       // 其他按钮组

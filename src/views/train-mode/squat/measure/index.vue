@@ -1,11 +1,11 @@
 <!--
  * @Author      : Mr.bin
- * @Date        : 2023-06-08 11:21:04
- * @LastEditTime: 2023-06-09 15:20:53
- * @Description : 静蹲测试-具体测量
+ * @Date        : 2023-06-09 17:30:05
+ * @LastEditTime: 2023-06-10 10:08:32
+ * @Description : 下蹲动作训练-具体测量
 -->
 <template>
-  <div class="quiet-squat-down-measure">
+  <div class="squat-measure">
     <!-- 语音播放 -->
     <audio ref="audio" controls="controls" hidden :src="audioSrc" />
 
@@ -14,14 +14,15 @@
       <el-page-header
         class="page"
         title="退出订单"
-        content="静蹲测试"
+        content="下蹲动作训练"
         @back="handleExit"
       ></el-page-header>
 
       <!-- 介绍说明 -->
       <div class="introduce">
+        <div class="item">训练目的：形成正确的静蹲/下蹲动作模式</div>
         <div class="item">
-          请双脚平稳站立在踏板上，保持一定的下蹲角度，使滑块保持在绿色区域内，可选择睁眼/闭眼进行测试。
+          执行动作：用膝关节推开两侧软垫，进行静蹲/下蹲训练，使滑块保持在绿色区域内
         </div>
       </div>
 
@@ -37,7 +38,7 @@
             <div class="center-num-50">50%</div>
             <div class="center-num-100">100%</div>
           </div>
-          <div class="center-bg"></div>
+          <div class="center-bg" :style="colorObj"></div>
           <el-slider
             class="center-core"
             v-model="core"
@@ -63,11 +64,11 @@
       <!-- 按钮组 -->
       <div class="btn">
         <el-button
-          class="item"
           type="primary"
           @click="handleStart"
           :disabled="isStart"
-          >开始测量</el-button
+          class="item"
+          >开始训练</el-button
         >
         <el-button
           class="item"
@@ -76,6 +77,14 @@
           :disabled="isStart"
           >刷新页面</el-button
         >
+      </div>
+
+      <!-- 膝盖内扣提醒 -->
+      <div class="warn">
+        <div class="text" v-show="this.innerBuckle ? true : false">
+          <i class="el-icon-error"></i>
+          请注意！膝关节已内扣！
+        </div>
       </div>
     </div>
   </div>
@@ -89,18 +98,18 @@ import path from 'path'
 import SerialPort from 'serialport'
 import Readline from '@serialport/parser-readline'
 
-import { analyzeTestResult } from '@/utils/analyze-test-result.js'
+import { analyzeTrainResult } from '@/utils/analyze-train-result.js'
 
 export default {
-  name: 'quiet-squat-down-measure',
+  name: 'squat-measure',
 
   data() {
     return {
       /* 语音相关 */
       audioOpen: this.$store.state.voiceSwitch,
-      audioSrc: path.join(__static, `narrate/mandarin/Test/静蹲测试.mp3`),
+      audioSrc: path.join(__static, `narrate/mandarin/Train/下蹲动作训练.mp3`),
 
-      timeBgSrc: require('@/assets/img/Test/Measure/倒计时背景.png'),
+      timeBgSrc: require('@/assets/img/Train/Measure/倒计时背景.png'),
 
       /* 串口相关变量 */
       usbPort: null,
@@ -109,6 +118,7 @@ export default {
 
       /* 控制类 */
       isStart: false, // 是否开始
+      innerBuckle: false, // 膝盖是否内扣
 
       /* 其他 */
       timeClock: null, // 计时器
@@ -126,7 +136,19 @@ export default {
       leftWeightArray: [], // 左负重数组
       rightWeightArray: [], // 右负重数组
 
-      core: 50 // 重心偏移值
+      core: 50, // 重心偏移值
+
+      colorObj: {
+        'background-image': `linear-gradient(
+          to right,
+          rgba(255, 255, 0, 0.5),
+          rgba(255, 255, 0, 0.5) 47.5%,
+          rgba(0, 128, 0, 0.5) 47.5%,
+          rgba(0, 128, 0, 0.5) 52.5%,
+          rgba(255, 255, 0, 0.5) 52.5%,
+          rgba(255, 255, 0, 0.5) 100%
+        )`
+      }
     }
   },
 
@@ -216,7 +238,7 @@ export default {
             /* 调用 this.usbPort.open() 失败时触发（开启串口失败） */
             this.usbPort.on('error', () => {
               this.$alert(
-                `请重新连接USB线，然后点击"刷新页面"按钮，重新测试！`,
+                `请重新连接USB线，然后点击"刷新页面"按钮，重新训练！`,
                 '串口开启失败',
                 {
                   type: 'error',
@@ -233,6 +255,15 @@ export default {
             this.parser = this.usbPort.pipe(new Readline({ delimiter: '\n' }))
             this.parser.on('data', data => {
               // console.log(data) // {String} 00326740032826，前两位是限位开关量（0或1）
+
+              /* 膝盖是否内扣警告 */
+              const innerBuckleLeft = parseInt(data.slice(0, 1))
+              const innerBuckleRight = parseInt(data.slice(1, 2))
+              if (innerBuckleLeft === 1 && innerBuckleRight === 1) {
+                this.innerBuckle = false
+              } else {
+                this.innerBuckle = true
+              }
 
               /* 计算左、右负重 */
               this.leftWeight = parseFloat(
@@ -276,7 +307,7 @@ export default {
           } else {
             this.$getLogger('没有检测到USB连接')
             this.$alert(
-              `请重新连接USB线，然后点击"刷新页面"按钮，重新测试！`,
+              `请重新连接USB线，然后点击"刷新页面"按钮，重新训练！`,
               '没有检测到USB连接',
               {
                 type: 'error',
@@ -293,7 +324,7 @@ export default {
         .catch(err => {
           this.$getLogger(err)
           this.$alert(
-            `${err}。请重新连接USB线，然后点击"刷新页面"按钮，重新测试！`,
+            `${err}。请重新连接USB线，然后点击"刷新页面"按钮，重新训练！`,
             `初始化SerialPort.list失败`,
             {
               type: 'error',
@@ -340,15 +371,15 @@ export default {
         leftWeightArray: this.leftWeightArray,
         rightWeightArray: this.rightWeightArray
       }
-      const result = analyzeTestResult(res)
+      const result = analyzeTrainResult(res)
 
-      /* 删除Vuex参数配置数组的第一个元素 */
+      /* 删除 Vuex 参数配置数组的第一个元素 */
       let settings = JSON.parse(JSON.stringify(this.$store.state.settings))
       settings.shift()
       this.$store.dispatch('setSettings', settings).then(() => {
         /* 数据 */
         const obj = {
-          pattern: '静蹲测试',
+          pattern: '下蹲动作训练',
           side: this.affectedSide, // 患侧（左腿、右腿）
           leftWeightArray: JSON.stringify(this.leftWeightArray), // 左侧负重数组
           rightWeightArray: JSON.stringify(this.rightWeightArray), // 右侧负重数组
@@ -356,7 +387,10 @@ export default {
           rightAverageWeight: result.rightAverageWeight, // 右侧负重平均值
           leftAverageWeightPercent: result.leftAverageWeightPercent, // 左侧负重平均百分比
           rightAverageWeightPercent: result.rightAverageWeightPercent, // 右侧负重平均百分比
-          trajectoryArray: JSON.stringify(result.rightWeightPercentArray) // 重心曲线图轨迹数组
+          leftWeightPercentArray: JSON.stringify(result.leftWeightPercentArray), // 左负重瞬时百分比数组（用于绘制重心移动图形）
+          rightWeightPercentArray: JSON.stringify(
+            result.rightWeightPercentArray
+          ) // 右负重瞬时百分比数组（用于绘制重心移动图形）
         }
 
         /* 暂存至 sessionStorage */
@@ -401,20 +435,17 @@ export default {
         // 下一项
         let route = ''
         switch (this.$store.state.settings[0].pattern) {
-          case '精准负重测试':
-            route = 'precision-weight-measure'
+          case '坐站训练':
+            route = 'sit-stand-measure'
             break
-          case '站立稳定测试':
-            route = 'standing-stability-measure'
+          case '精准负重训练':
+            route = 'accurate-load-measure'
             break
-          case '站立平衡测试':
-            route = 'standing-balance-measure'
+          case '重心转移训练':
+            route = 'barycenter-transfer-measure'
             break
-          case '静蹲测试':
-            route = 'quiet-squat-down-measure'
-            break
-          case '动态下蹲测试':
-            route = 'dynamic-squat-measure'
+          case '下蹲动作训练':
+            route = 'squat-measure'
             break
           default:
             break
@@ -426,7 +457,7 @@ export default {
       } else {
         // 完成订单
         this.$router.push({
-          path: '/test-send'
+          path: '/train-send'
         })
       }
     },
@@ -438,7 +469,7 @@ export default {
       this.$router.push({
         path: '/refresh',
         query: {
-          routerName: JSON.stringify('/quiet-squat-down-measure'),
+          routerName: JSON.stringify('/sit-stand-measure'),
           duration: JSON.stringify(300)
         }
       })
@@ -448,7 +479,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.quiet-squat-down-measure {
+.squat-measure {
   width: 100%;
   height: 100%;
   @include flex(row, center, center);
@@ -511,19 +542,6 @@ export default {
           float: left;
           width: 100%;
           height: 60px;
-          background-image: linear-gradient(
-            to right,
-            rgba(255, 0, 0, 0.5),
-            rgba(255, 0, 0, 0.5) 40%,
-            rgba(255, 255, 0, 0.5) 40%,
-            rgba(255, 255, 0, 0.5) 47.5%,
-            rgba(0, 128, 0, 0.5) 47.5%,
-            rgba(0, 128, 0, 0.5) 52.5%,
-            rgba(255, 255, 0, 0.5) 52.5%,
-            rgba(255, 255, 0, 0.5) 60%,
-            rgba(255, 0, 0, 0.5) 60%,
-            rgba(255, 0, 0, 0.5) 100%
-          );
         }
         .center-core {
           padding-top: 10px;
@@ -549,8 +567,9 @@ export default {
 
     /* 倒计时 */
     .count-down {
+      // display: none !important;
       @include flex(row, center, center);
-      margin-bottom: 80px;
+      margin-bottom: 40px;
       .box {
         position: relative;
         @include flex(row, center, center);
@@ -578,6 +597,17 @@ export default {
       .item {
         font-size: 34px;
         margin: 0 60px;
+      }
+    }
+
+    .warn {
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%);
+      .text {
+        font-size: 38px;
+        color: red;
       }
     }
   }

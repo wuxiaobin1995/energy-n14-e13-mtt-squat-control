@@ -1,11 +1,11 @@
 <!--
  * @Author      : Mr.bin
- * @Date        : 2023-06-08 11:21:04
- * @LastEditTime: 2023-06-09 15:20:53
- * @Description : 静蹲测试-具体测量
+ * @Date        : 2023-06-09 17:29:27
+ * @LastEditTime: 2023-06-10 10:23:52
+ * @Description : 重心转移训练-具体测量
 -->
 <template>
-  <div class="quiet-squat-down-measure">
+  <div class="barycenter-transfer-measure">
     <!-- 语音播放 -->
     <audio ref="audio" controls="controls" hidden :src="audioSrc" />
 
@@ -14,40 +14,17 @@
       <el-page-header
         class="page"
         title="退出订单"
-        content="静蹲测试"
+        content="重心转移训练"
         @back="handleExit"
       ></el-page-header>
 
       <!-- 介绍说明 -->
       <div class="introduce">
         <div class="item">
-          请双脚平稳站立在踏板上，保持一定的下蹲角度，使滑块保持在绿色区域内，可选择睁眼/闭眼进行测试。
+          训练目的：作为深感觉训练重要一环，加强对于重心的控制
         </div>
-      </div>
-
-      <!-- 重心偏移 -->
-      <div class="center">
-        <div class="center-l">
-          <div>左腿<span class="unit">/kg</span></div>
-          <div class="value">{{ leftWeight }}</div>
-        </div>
-        <div class="center-c">
-          <div class="center-num">
-            <div class="center-num-0">100%</div>
-            <div class="center-num-50">50%</div>
-            <div class="center-num-100">100%</div>
-          </div>
-          <div class="center-bg"></div>
-          <el-slider
-            class="center-core"
-            v-model="core"
-            :disabled="true"
-            :show-tooltip="false"
-          ></el-slider>
-        </div>
-        <div class="center-r">
-          <div>右腿<span class="unit">/kg</span></div>
-          <div class="value">{{ rightWeight }}</div>
+        <div class="item">
+          执行动作：选取任意一点作为初始位置，将重心逐渐移动到绿色区域内，保持2-3秒后，回到初始位置，重复动作3-5次。训练完毕后，回到初始位置，点击“开始”，凭感觉达到目标负重
         </div>
       </div>
 
@@ -63,11 +40,11 @@
       <!-- 按钮组 -->
       <div class="btn">
         <el-button
-          class="item"
           type="primary"
           @click="handleStart"
           :disabled="isStart"
-          >开始测量</el-button
+          class="item"
+          >开始训练</el-button
         >
         <el-button
           class="item"
@@ -89,18 +66,18 @@ import path from 'path'
 import SerialPort from 'serialport'
 import Readline from '@serialport/parser-readline'
 
-import { analyzeTestResult } from '@/utils/analyze-test-result.js'
+import { analyzeTrainResult } from '@/utils/analyze-train-result.js'
 
 export default {
-  name: 'quiet-squat-down-measure',
+  name: 'barycenter-transfer-measure',
 
   data() {
     return {
       /* 语音相关 */
       audioOpen: this.$store.state.voiceSwitch,
-      audioSrc: path.join(__static, `narrate/mandarin/Test/静蹲测试.mp3`),
+      audioSrc: path.join(__static, `narrate/mandarin/Train/重心转移训练.mp3`),
 
-      timeBgSrc: require('@/assets/img/Test/Measure/倒计时背景.png'),
+      timeBgSrc: require('@/assets/img/Train/Measure/倒计时背景.png'),
 
       /* 串口相关变量 */
       usbPort: null,
@@ -112,14 +89,15 @@ export default {
 
       /* 其他 */
       timeClock: null, // 计时器
-      time: this.$store.state.settings[0].time, // 倒计时
-      nowTime: this.$store.state.settings[0].time, // 实时倒计时
+      time: 5, // 倒计时，默认5秒
+      nowTime: 5, // 实时倒计时
 
       leftK: 0, // 左K
       rightK: 0, // 右K
       leftStandard: 0, // 左调零值
       rightStandard: 0, // 右调零值
       affectedSide: this.$store.state.settings[0].side, // 患侧
+      target: this.$store.state.settings[0].target, // 目标负重比例%
 
       leftWeight: 0, // 左负重（kg），精确到0.1kg
       rightWeight: 0, // 右负重（kg），精确到0.1kg
@@ -216,7 +194,7 @@ export default {
             /* 调用 this.usbPort.open() 失败时触发（开启串口失败） */
             this.usbPort.on('error', () => {
               this.$alert(
-                `请重新连接USB线，然后点击"刷新页面"按钮，重新测试！`,
+                `请重新连接USB线，然后点击"刷新页面"按钮，重新训练！`,
                 '串口开启失败',
                 {
                   type: 'error',
@@ -276,7 +254,7 @@ export default {
           } else {
             this.$getLogger('没有检测到USB连接')
             this.$alert(
-              `请重新连接USB线，然后点击"刷新页面"按钮，重新测试！`,
+              `请重新连接USB线，然后点击"刷新页面"按钮，重新训练！`,
               '没有检测到USB连接',
               {
                 type: 'error',
@@ -293,7 +271,7 @@ export default {
         .catch(err => {
           this.$getLogger(err)
           this.$alert(
-            `${err}。请重新连接USB线，然后点击"刷新页面"按钮，重新测试！`,
+            `${err}。请重新连接USB线，然后点击"刷新页面"按钮，重新训练！`,
             `初始化SerialPort.list失败`,
             {
               type: 'error',
@@ -335,28 +313,49 @@ export default {
         clearInterval(this.timeClock)
       }
 
+      /* 根据左右患侧来做变换 */
+      let lastCore = 50
+      if (this.affectedSide === '右腿') {
+        lastCore = this.core
+      } else {
+        lastCore = 100 - this.core
+      }
+      /* 计算是否达标 */
+      let trainResult = false
+      if (this.target - 2.5 <= lastCore && lastCore <= this.target + 2.5) {
+        trainResult = true
+      } else {
+        trainResult = false
+      }
+
       // 计算某些值
       const res = {
         leftWeightArray: this.leftWeightArray,
         rightWeightArray: this.rightWeightArray
       }
-      const result = analyzeTestResult(res)
+      const result = analyzeTrainResult(res)
 
-      /* 删除Vuex参数配置数组的第一个元素 */
+      /* 删除 Vuex 参数配置数组的第一个元素 */
       let settings = JSON.parse(JSON.stringify(this.$store.state.settings))
       settings.shift()
       this.$store.dispatch('setSettings', settings).then(() => {
         /* 数据 */
         const obj = {
-          pattern: '静蹲测试',
+          pattern: '重心转移训练',
           side: this.affectedSide, // 患侧（左腿、右腿）
+          lastCore: lastCore, // 最终的重心偏移值
+          target: this.target, // 目标负重比例%
+          trainResult: trainResult, // 成功与否（true、false）
           leftWeightArray: JSON.stringify(this.leftWeightArray), // 左侧负重数组
           rightWeightArray: JSON.stringify(this.rightWeightArray), // 右侧负重数组
           leftAverageWeight: result.leftAverageWeight, // 左侧负重平均值
           rightAverageWeight: result.rightAverageWeight, // 右侧负重平均值
           leftAverageWeightPercent: result.leftAverageWeightPercent, // 左侧负重平均百分比
           rightAverageWeightPercent: result.rightAverageWeightPercent, // 右侧负重平均百分比
-          trajectoryArray: JSON.stringify(result.rightWeightPercentArray) // 重心曲线图轨迹数组
+          leftWeightPercentArray: JSON.stringify(result.leftWeightPercentArray), // 左负重瞬时百分比数组（用于绘制重心移动图形）
+          rightWeightPercentArray: JSON.stringify(
+            result.rightWeightPercentArray
+          ) // 右负重瞬时百分比数组（用于绘制重心移动图形）
         }
 
         /* 暂存至 sessionStorage */
@@ -401,20 +400,17 @@ export default {
         // 下一项
         let route = ''
         switch (this.$store.state.settings[0].pattern) {
-          case '精准负重测试':
-            route = 'precision-weight-measure'
+          case '坐站训练':
+            route = 'sit-stand-measure'
             break
-          case '站立稳定测试':
-            route = 'standing-stability-measure'
+          case '精准负重训练':
+            route = 'accurate-load-measure'
             break
-          case '站立平衡测试':
-            route = 'standing-balance-measure'
+          case '重心转移训练':
+            route = 'barycenter-transfer-measure'
             break
-          case '静蹲测试':
-            route = 'quiet-squat-down-measure'
-            break
-          case '动态下蹲测试':
-            route = 'dynamic-squat-measure'
+          case '下蹲动作训练':
+            route = 'squat-measure'
             break
           default:
             break
@@ -426,7 +422,7 @@ export default {
       } else {
         // 完成订单
         this.$router.push({
-          path: '/test-send'
+          path: '/train-send'
         })
       }
     },
@@ -438,7 +434,7 @@ export default {
       this.$router.push({
         path: '/refresh',
         query: {
-          routerName: JSON.stringify('/quiet-squat-down-measure'),
+          routerName: JSON.stringify('/barycenter-transfer-measure'),
           duration: JSON.stringify(300)
         }
       })
@@ -448,7 +444,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.quiet-squat-down-measure {
+.barycenter-transfer-measure {
   width: 100%;
   height: 100%;
   @include flex(row, center, center);
@@ -479,94 +475,26 @@ export default {
       }
     }
 
-    /* 重心偏移 */
-    .center {
-      flex: 1;
-      @include flex(row, center, center);
-      .center-l,
-      .center-r {
-        @include flex(column, center, center);
-        width: 140px;
-        font-size: 26px;
-        .unit {
-          font-size: 16px;
-        }
-        .value {
-          margin-top: 10px;
-          @include flex(row, center, center);
-          width: 80px;
-          padding: 4px;
-          background-color: rgb(204, 204, 204);
-          border-radius: 6px;
-        }
-      }
-      .center-c {
-        flex: 1;
-        .center-num {
-          @include flex(row, space-between, center);
-          margin-bottom: 5px;
-        }
-        .center-bg {
-          border-radius: 30px;
-          float: left;
-          width: 100%;
-          height: 60px;
-          background-image: linear-gradient(
-            to right,
-            rgba(255, 0, 0, 0.5),
-            rgba(255, 0, 0, 0.5) 40%,
-            rgba(255, 255, 0, 0.5) 40%,
-            rgba(255, 255, 0, 0.5) 47.5%,
-            rgba(0, 128, 0, 0.5) 47.5%,
-            rgba(0, 128, 0, 0.5) 52.5%,
-            rgba(255, 255, 0, 0.5) 52.5%,
-            rgba(255, 255, 0, 0.5) 60%,
-            rgba(255, 0, 0, 0.5) 60%,
-            rgba(255, 0, 0, 0.5) 100%
-          );
-        }
-        .center-core {
-          padding-top: 10px;
-          width: 100%;
-          // 修改指针和背景的样式
-          & /deep/ .el-slider__runway {
-            background-color: #ffffff !important;
-          }
-          & /deep/ .el-slider__bar {
-            background-color: #ffffff !important;
-          }
-          & /deep/ .el-slider__button {
-            margin-top: 20px;
-            border-width: 0 10px 60px;
-            border-style: solid;
-            border-color: transparent transparent rgb(0, 0, 0);
-            border-radius: 20px;
-            background-color: rgba(182, 182, 182, 0);
-          }
-        }
-      }
-    }
-
     /* 倒计时 */
     .count-down {
+      flex: 1;
       @include flex(row, center, center);
-      margin-bottom: 80px;
       .box {
         position: relative;
         @include flex(row, center, center);
         .img {
-          width: 100%;
+          transform: scale(2, 2);
         }
         .text {
           position: absolute;
-          top: 25px;
-          font-size: 20px;
+          top: -15%;
+          font-size: 30px;
           color: #ffffff;
         }
         .value {
           position: absolute;
-          top: 32%;
-          font-size: 60px;
+          top: 8%;
+          font-size: 130px;
         }
       }
     }

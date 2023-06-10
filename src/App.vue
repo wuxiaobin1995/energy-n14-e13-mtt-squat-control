@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2023-04-14 15:23:55
- * @LastEditTime: 2023-04-27 14:14:58
+ * @LastEditTime: 2023-06-09 09:04:00
  * @Description : 根组件
 -->
 <template>
@@ -55,6 +55,10 @@ export default {
       /* 初始化右K的值 */
       if (!window.localStorage.getItem('rightK')) {
         window.localStorage.setItem('rightK', '99.368')
+      }
+      /* 初始化API的IP地址 */
+      if (!window.localStorage.getItem('mttIP')) {
+        window.localStorage.setItem('mttIP', '192.168.1.150')
       }
     },
 

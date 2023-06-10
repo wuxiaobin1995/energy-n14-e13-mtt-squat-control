@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2022-07-28 14:00:00
- * @LastEditTime: 2023-05-18 11:34:15
+ * @LastEditTime: 2023-06-09 09:35:31
  * @Description : 开发者
 -->
 <template>
@@ -10,13 +10,22 @@
       <el-page-header
         class="page"
         title="返回首页"
-        content="开发者（MTT版）"
+        content="开发者（MTT版 v1.0.0）"
         @back="handleToHome"
       ></el-page-header>
 
       <div class="btn">
         <el-button class="item" type="success" round @click="handleOpenDev"
           >打开控制台</el-button
+        >
+      </div>
+
+      <div class="ip">
+        <el-input placeholder="请输入服务器的ip" v-model="mttIP">
+          <template slot="prepend">MTT服务器IP地址：</template>
+        </el-input>
+        <el-button class="item" type="primary" @click="handleSetIP"
+          >设置IP</el-button
         >
       </div>
     </div>
@@ -29,6 +38,16 @@ import { remote } from 'electron'
 
 export default {
   name: 'set-developer',
+
+  data() {
+    return {
+      mttIP: ''
+    }
+  },
+
+  created() {
+    this.mttIP = window.localStorage.getItem('mttIP')
+  },
 
   methods: {
     /**
@@ -52,6 +71,19 @@ export default {
           message: `打开控制台失败：${err}`
         })
       }
+    },
+
+    /**
+     * @description: 设置IP
+     */
+    handleSetIP() {
+      window.localStorage.setItem('mttIP', this.mttIP)
+
+      this.$message({
+        type: 'success',
+        message: `设置IP【${this.mttIP}】成功！`,
+        duration: 3000
+      })
     }
   }
 }
@@ -83,6 +115,14 @@ export default {
       @include flex(column, center, center);
       .item {
         font-size: 28px;
+      }
+    }
+
+    .ip {
+      margin-top: 60px;
+      @include flex(row, center, center);
+      .item {
+        margin-left: 30px;
       }
     }
   }

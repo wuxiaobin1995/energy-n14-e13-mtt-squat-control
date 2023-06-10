@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2023-04-14 17:56:34
- * @LastEditTime: 2023-06-08 14:45:14
+ * @LastEditTime: 2023-06-10 11:03:28
  * @Description : home
 -->
 <template>
@@ -55,7 +55,7 @@ export default {
       switchValue: null, // 语音相关
 
       mainForm: {
-        orderId: '1168944' // 订单号
+        orderId: '' // 订单号
       },
       rules: {
         orderId: [{ required: true, message: '请输入订单号', trigger: 'blur' }]
@@ -75,7 +75,8 @@ export default {
      * @description: 初始化 Vuex
      */
     initVuex() {
-      this.$store.dispatch('setOrderId', '')
+      this.$store.dispatch('setOrderId', '') // 订单号
+      // 当前登录的用户及其信息
       this.$store.dispatch('changeCurrentUserInfo', {
         userId: '',
         userName: '',
@@ -86,7 +87,8 @@ export default {
         admission: '',
         stage: ''
       })
-      this.$store.dispatch('setSettings', [])
+      this.$store.dispatch('setSettings', []) // 参数配置数组
+      this.$store.dispatch('setNextDevice', '') // 下一个设备的名称
     },
 
     /**
@@ -132,18 +134,18 @@ export default {
     /**
      * @description: 用户输入订单号，获取信息
      * @param {string} order_id 订单号
-     * @param {string} device_type 设备类别
      */
     setOrderID(order_id) {
+      const mttIP = window.localStorage.getItem('mttIP')
+      const api = `http://${mttIP}/energy_t6_m5_mtt/public/index.php/base/getOrderIDMessage`
+      console.log(api)
+
       this.fullscreenLoading = true
       this.$axios
-        .post(
-          `//192.168.1.150/energy_t6_m5_mtt/public/index.php/base/getOrderIDMessage`,
-          {
-            order_id: order_id,
-            device_type: 'SquatControl'
-          }
-        )
+        .post(api, {
+          order_id: order_id,
+          device_type: 'SquatControl'
+        })
         .then(res => {
           console.log('后端返回的源数据：\n', res)
           const data = res.data
@@ -159,7 +161,7 @@ export default {
               this.$message({
                 message: `订单号获取成功，并设置Vuex。`,
                 type: 'success',
-                duration: 3500
+                duration: 2000
               })
             })
 
@@ -179,7 +181,7 @@ export default {
                 this.$message({
                   message: `用户信息获取成功，并设置Vuex。`,
                   type: 'success',
-                  duration: 3500,
+                  duration: 2000,
                   offset: 60
                 })
               })
@@ -192,12 +194,18 @@ export default {
               setDatas = JSON.parse(data.result.train_set_data)
             }
             console.log('该订单包含的所有设备的配置项：\n', setDatas)
+            let nextDevice = ''
             let setArray = []
             for (let i = 0; i < setDatas.length; i++) {
               const item = setDatas[i]
               if (item.name === 'SquatControl') {
                 setArray = item.settings
                 console.log(`对应设备【${item.name}】的配置项：\n`, setArray)
+                // 订单的下一个设备（用于结束后提示下一个设备，增加用户体验）
+                if (setDatas[i + 1]) {
+                  nextDevice = setDatas[i + 1].name
+                  console.log('订单的下一个设备名称：', nextDevice)
+                }
               }
             }
 
@@ -206,9 +214,28 @@ export default {
               this.$message({
                 message: `参数配置数组获取成功，并设置Vuex。`,
                 type: 'success',
-                duration: 3500,
+                duration: 2000,
                 offset: 100
               })
+            })
+
+            // 设置订单的下一个设备名称到 Vuex
+            this.$store.dispatch('setNextDevice', nextDevice).then(() => {
+              if (nextDevice === '') {
+                this.$message({
+                  message: `本设备为最后一项，并设置Vuex。`,
+                  type: 'success',
+                  duration: 2000,
+                  offset: 140
+                })
+              } else {
+                this.$message({
+                  message: `订单的下一个设备名称【${nextDevice}】，并设置Vuex。`,
+                  type: 'success',
+                  duration: 2000,
+                  offset: 140
+                })
+              }
             })
 
             // 跳转至任务详情页

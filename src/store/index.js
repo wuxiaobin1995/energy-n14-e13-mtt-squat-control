@@ -1,7 +1,7 @@
 /*
  * @Author      : Mr.bin
  * @Date        : 2023-04-14 15:23:55
- * @LastEditTime: 2023-06-07 11:50:29
+ * @LastEditTime: 2023-06-09 10:46:30
  * @Description : vuex
  */
 import Vue from 'vue'
@@ -35,6 +35,9 @@ export default new Vuex.Store({
     /* 参数配置数组 */
     settings: [],
 
+    /* 下一个设备的名称（用于结束后提示下一个设备，增加用户体验） */
+    nextDevice: '',
+
     /* 语音开关 */
     voiceSwitch: true
   },
@@ -58,6 +61,11 @@ export default new Vuex.Store({
     /* 参数配置数组 */
     SET_SETTINGS(state, settings) {
       state.settings = settings
+    },
+
+    /* 下一个设备的名称（用于结束后提示下一个设备，增加用户体验） */
+    SET_NEXTDEVICE(state, nextDevice) {
+      state.nextDevice = nextDevice
     },
 
     /* 语音开关 */
@@ -95,6 +103,14 @@ export default new Vuex.Store({
     setSettings({ commit }, settings) {
       return new Promise((resolve, reject) => {
         commit('SET_SETTINGS', settings)
+        resolve()
+      })
+    },
+
+    /* 下一个设备的名称（用于结束后提示下一个设备，增加用户体验） */
+    setNextDevice({ commit }, nextDevice) {
+      return new Promise((resolve, reject) => {
+        commit('SET_NEXTDEVICE', nextDevice)
         resolve()
       })
     },

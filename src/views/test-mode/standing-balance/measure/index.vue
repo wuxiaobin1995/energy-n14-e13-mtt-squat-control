@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2023-06-08 10:46:45
- * @LastEditTime: 2023-06-08 11:35:54
+ * @LastEditTime: 2023-06-09 15:20:59
  * @Description : 站立平衡测试-具体测量
 -->
 <template>
@@ -29,7 +29,7 @@
       <!-- 重心偏移 -->
       <div class="center">
         <div class="center-l">
-          <div>左<span class="unit">/kg</span></div>
+          <div>左腿<span class="unit">/kg</span></div>
           <div class="value">{{ leftWeight }}</div>
         </div>
         <div class="center-c">
@@ -47,7 +47,7 @@
           ></el-slider>
         </div>
         <div class="center-r">
-          <div>右<span class="unit">/kg</span></div>
+          <div>右腿<span class="unit">/kg</span></div>
           <div class="value">{{ rightWeight }}</div>
         </div>
       </div>
@@ -64,20 +64,11 @@
       <!-- 按钮组 -->
       <div class="btn">
         <el-button
+          class="item"
           type="primary"
           @click="handleStart"
           :disabled="isStart"
-          class="item"
           >开始测量</el-button
-        >
-        <el-button
-          class="item"
-          type="success"
-          @click="handleFinish"
-          :disabled="!isFinish"
-          >{{
-            this.$store.state.settings.length === 0 ? '完成订单' : '下一项'
-          }}</el-button
         >
         <el-button
           class="item"
@@ -119,7 +110,6 @@ export default {
 
       /* 控制类 */
       isStart: false, // 是否开始
-      isFinish: false, // 是否完成
 
       /* 其他 */
       timeClock: null, // 计时器
@@ -324,7 +314,6 @@ export default {
      */
     handleStart() {
       this.isStart = true
-      this.isFinish = false
       this.nowTime = this.time
       this.leftWeightArray = []
       this.rightWeightArray = []
@@ -357,33 +346,52 @@ export default {
       /* 删除Vuex参数配置数组的第一个元素 */
       let settings = JSON.parse(JSON.stringify(this.$store.state.settings))
       settings.shift()
-      this.$store.dispatch('setSettings', settings)
+      this.$store.dispatch('setSettings', settings).then(() => {
+        /* 数据 */
+        const obj = {
+          pattern: '站立平衡测试',
+          side: this.affectedSide, // 患侧（左腿、右腿）
+          leftWeightArray: JSON.stringify(this.leftWeightArray), // 左侧负重数组
+          rightWeightArray: JSON.stringify(this.rightWeightArray), // 右侧负重数组
+          leftAverageWeight: result.leftAverageWeight, // 左侧负重平均值
+          rightAverageWeight: result.rightAverageWeight, // 右侧负重平均值
+          leftAverageWeightPercent: result.leftAverageWeightPercent, // 左侧负重平均百分比
+          rightAverageWeightPercent: result.rightAverageWeightPercent, // 右侧负重平均百分比
+          trajectoryArray: JSON.stringify(result.rightWeightPercentArray) // 重心曲线图轨迹数组
+        }
 
-      /* 数据 */
-      const obj = {
-        pattern: '站立平衡测试',
-        side: this.affectedSide, // 患侧（左腿、右腿）
-        leftWeightArray: JSON.stringify(this.leftWeightArray), // 左侧负重数组
-        rightWeightArray: JSON.stringify(this.rightWeightArray), // 右侧负重数组
-        leftAverageWeight: result.leftAverageWeight, // 左侧负重平均值
-        rightAverageWeight: result.rightAverageWeight, // 右侧负重平均值
-        leftAverageWeightPercent: result.leftAverageWeightPercent, // 左侧负重平均百分比
-        rightAverageWeightPercent: result.rightAverageWeightPercent, // 右侧负重平均百分比
-        trajectoryArray: JSON.stringify(result.rightWeightPercentArray) // 重心曲线图轨迹数组
-      }
+        /* 暂存至 sessionStorage */
+        let resultArray = JSON.parse(
+          window.sessionStorage.getItem('resultArray')
+        )
+        resultArray.push(obj)
+        window.sessionStorage.setItem(
+          'resultArray',
+          JSON.stringify(resultArray)
+        )
 
-      /* 暂存至 sessionStorage */
-      let resultArray = JSON.parse(window.sessionStorage.getItem('resultArray'))
-      resultArray.push(obj)
-      window.sessionStorage.setItem('resultArray', JSON.stringify(resultArray))
-
-      this.$message({
-        message: `提示，完成该项目`,
-        type: 'success',
-        duration: 3000
+        if (this.$store.state.settings.length) {
+          this.$alert(`请点击“下一项”按钮`, '完成', {
+            type: 'success',
+            showClose: false,
+            center: true,
+            confirmButtonText: '下一项',
+            callback: () => {
+              this.handleFinish()
+            }
+          })
+        } else {
+          this.$alert(`请点击“完成订单”按钮`, '完成', {
+            type: 'success',
+            showClose: false,
+            center: true,
+            confirmButtonText: '完成订单',
+            callback: () => {
+              this.handleFinish()
+            }
+          })
+        }
       })
-
-      this.isFinish = true
     },
 
     /**

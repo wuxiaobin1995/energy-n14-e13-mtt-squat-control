@@ -1,7 +1,7 @@
 /*
  * @Author      : Mr.bin
  * @Date        : 2023-04-14 15:23:55
- * @LastEditTime: 2023-06-08 14:09:53
+ * @LastEditTime: 2023-06-09 17:28:19
  * @Description : 路由
  */
 import Vue from 'vue'
@@ -66,13 +66,6 @@ const routes = [
       },
 
       /* 评估 */
-      // 评估数据统一发送页面
-      {
-        path: 'test-send',
-        name: 'test-send',
-        component: () => import('@/views/test-mode/test-send'),
-        meta: ['评估数据统一发送页面']
-      },
       // 精准负重测试-具体测量
       {
         path: 'precision-weight-measure',
@@ -110,14 +103,52 @@ const routes = [
       },
 
       /* 训练 */
-      // 训练数据统一发送页面
+      // 坐站训练
       {
-        path: 'train-send',
-        name: 'train-send',
-        component: () => import('@/views/train-mode/train-send'),
-        meta: ['训练数据统一发送页面']
+        path: 'sit-stand-measure',
+        name: 'sit-stand-measure',
+        component: () => import('@/views/train-mode/sit-stand/measure'),
+        meta: ['坐站训练-具体测量']
+      },
+      // 精准负重训练
+      {
+        path: 'accurate-load-measure',
+        name: 'accurate-load-measure',
+        component: () => import('@/views/train-mode/accurate-load/measure'),
+        meta: ['精准负重训练-具体测量']
+      },
+      // 重心转移训练
+      {
+        path: 'barycenter-transfer-measure',
+        name: 'barycenter-transfer-measure',
+        component: () =>
+          import('@/views/train-mode/barycenter-transfer/measure'),
+        meta: ['重心转移训练-具体测量']
+      },
+      // 下蹲动作训练
+      {
+        path: 'squat-measure',
+        name: 'squat-measure',
+        component: () => import('@/views/train-mode/squat/measure'),
+        meta: ['下蹲动作训练-具体测量']
       }
     ]
+  },
+
+  /* 评估数据统一发送页面 */
+  {
+    path: '/test-send',
+    name: 'test-send',
+    component: () => import('@/views/test-mode/test-send'),
+    meta: ['评估数据统一发送页面']
+  },
+
+  /* 训练数据统一发送页面 */
+  {
+    path: '/train-send',
+    name: 'train-send',
+    component: () => import('@/views/train-mode/train-send'),
+    meta: ['训练数据统一发送页面']
   },
 
   {

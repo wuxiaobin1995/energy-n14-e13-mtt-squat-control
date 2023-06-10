@@ -7,7 +7,7 @@
 import axios from 'axios'
 
 const instance = axios.create({
-  baseURL: 'http:', // 局域网
+  baseURL: '', // 局域网
   timeout: 8000
 })
 
