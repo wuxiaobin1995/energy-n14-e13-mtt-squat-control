@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2022-07-28 14:06:19
- * @LastEditTime: 2022-07-28 14:07:24
+ * @LastEditTime: 2023-06-15 14:01:30
  * @Description : 调零
 -->
 <template>
@@ -191,9 +191,7 @@ export default {
                 this.handleRefresh()
               })
               .catch(() => {
-                this.$router.push({
-                  path: '/home'
-                })
+                this.handleToHome()
               })
           }
         })
@@ -216,9 +214,7 @@ export default {
               this.handleRefresh()
             })
             .catch(() => {
-              this.$router.push({
-                path: '/home'
-              })
+              this.handleToHome()
             })
         })
     },

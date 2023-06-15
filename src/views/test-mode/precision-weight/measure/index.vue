@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2023-04-28 17:17:36
- * @LastEditTime: 2023-06-09 11:15:24
+ * @LastEditTime: 2023-06-15 17:35:57
  * @Description : 精准负重测试-具体测量
 -->
 <template>
@@ -328,7 +328,7 @@ export default {
     initChart() {
       // 计算横坐标数组
       this.xData = []
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < parseInt(this.time * 10); i++) {
         this.xData.push(parseFloat((i * 0.1).toFixed(1)))
       }
 
