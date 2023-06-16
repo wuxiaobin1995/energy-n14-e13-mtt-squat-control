@@ -1,7 +1,7 @@
 /*
  * @Author      : Mr.bin
  * @Date        : 2023-04-14 15:23:55
- * @LastEditTime: 2023-06-09 17:28:19
+ * @LastEditTime: 2023-06-16 09:18:06
  * @Description : 路由
  */
 import Vue from 'vue'
@@ -103,21 +103,21 @@ const routes = [
       },
 
       /* 训练 */
-      // 坐站训练
+      // 坐站训练-具体测量
       {
         path: 'sit-stand-measure',
         name: 'sit-stand-measure',
         component: () => import('@/views/train-mode/sit-stand/measure'),
         meta: ['坐站训练-具体测量']
       },
-      // 精准负重训练
+      // 精准负重训练-具体测量
       {
         path: 'accurate-load-measure',
         name: 'accurate-load-measure',
         component: () => import('@/views/train-mode/accurate-load/measure'),
         meta: ['精准负重训练-具体测量']
       },
-      // 重心转移训练
+      // 重心转移训练-具体测量
       {
         path: 'barycenter-transfer-measure',
         name: 'barycenter-transfer-measure',
@@ -125,7 +125,7 @@ const routes = [
           import('@/views/train-mode/barycenter-transfer/measure'),
         meta: ['重心转移训练-具体测量']
       },
-      // 下蹲动作训练
+      // 下蹲动作训练-具体测量
       {
         path: 'squat-measure',
         name: 'squat-measure',
