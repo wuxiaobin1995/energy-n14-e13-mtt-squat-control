@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2023-06-08 11:21:04
- * @LastEditTime: 2023-06-09 15:20:53
+ * @LastEditTime: 2023-06-19 22:31:29
  * @Description : 静蹲测试-具体测量
 -->
 <template>
@@ -69,11 +69,7 @@
           :disabled="isStart"
           >开始测量</el-button
         >
-        <el-button
-          class="item"
-          type="info"
-          @click="handleRefresh"
-          :disabled="isStart"
+        <el-button class="item" type="info" @click="handleRefresh"
           >刷新页面</el-button
         >
       </div>
@@ -350,13 +346,13 @@ export default {
         const obj = {
           pattern: '静蹲测试',
           side: this.affectedSide, // 患侧（左腿、右腿）
-          leftWeightArray: JSON.stringify(this.leftWeightArray), // 左侧负重数组
-          rightWeightArray: JSON.stringify(this.rightWeightArray), // 右侧负重数组
+          leftWeightArray: this.leftWeightArray, // 左侧负重数组
+          rightWeightArray: this.rightWeightArray, // 右侧负重数组
           leftAverageWeight: result.leftAverageWeight, // 左侧负重平均值
           rightAverageWeight: result.rightAverageWeight, // 右侧负重平均值
           leftAverageWeightPercent: result.leftAverageWeightPercent, // 左侧负重平均百分比
           rightAverageWeightPercent: result.rightAverageWeightPercent, // 右侧负重平均百分比
-          trajectoryArray: JSON.stringify(result.rightWeightPercentArray) // 重心曲线图轨迹数组
+          trajectoryArray: result.rightWeightPercentArray // 重心曲线图轨迹数组
         }
 
         /* 暂存至 sessionStorage */

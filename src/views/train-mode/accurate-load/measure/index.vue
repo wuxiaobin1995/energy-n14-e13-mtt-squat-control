@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2023-06-09 16:56:39
- * @LastEditTime: 2023-06-10 09:46:27
+ * @LastEditTime: 2023-06-19 22:32:07
  * @Description : 精准负重训练-具体测量
 -->
 <template>
@@ -92,11 +92,7 @@
           @click="handleStart"
           >开始训练</el-button
         >
-        <el-button
-          class="item"
-          type="info"
-          @click="handleRefresh"
-          :disabled="isStart"
+        <el-button class="item" type="info" @click="handleRefresh"
           >刷新页面</el-button
         >
       </div>
@@ -474,14 +470,14 @@ export default {
         const obj = {
           pattern: '精准负重训练',
           side: this.affectedSide, // 患侧（左腿、右腿）
-          leftWeightArray: JSON.stringify(this.leftWeightArray), // 左侧负重数组
-          rightWeightArray: JSON.stringify(this.rightWeightArray), // 右侧负重数组
-          upArr: JSON.stringify(this.upArr), // 上限数组
-          downArr: JSON.stringify(this.downArr), // 下限数组
+          leftWeightArray: this.leftWeightArray, // 左侧负重数组
+          rightWeightArray: this.rightWeightArray, // 右侧负重数组
+          upArr: this.upArr, // 上限数组
+          downArr: this.downArr, // 下限数组
           ultimateLoad: this.ultimateLoad, // 极限负重百分比%
           time: this.time, // 训练时长
           record: record, // 完成度%
-          ultimateLoadArr: JSON.stringify(this.ultimateLoadArr) // 曲线图轨迹数组
+          ultimateLoadArr: this.ultimateLoadArr // 曲线图轨迹数组
         }
 
         /* 暂存至 sessionStorage */

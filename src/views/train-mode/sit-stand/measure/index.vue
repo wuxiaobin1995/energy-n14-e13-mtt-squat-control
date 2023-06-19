@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2023-06-09 15:13:01
- * @LastEditTime: 2023-06-10 09:58:42
+ * @LastEditTime: 2023-06-19 22:32:41
  * @Description : 坐站训练-具体测量
 -->
 <template>
@@ -70,11 +70,7 @@
           :disabled="isStart"
           >开始训练</el-button
         >
-        <el-button
-          class="item"
-          type="info"
-          @click="handleRefresh"
-          :disabled="isStart"
+        <el-button class="item" type="info" @click="handleRefresh"
           >刷新页面</el-button
         >
       </div>
@@ -369,16 +365,14 @@ export default {
         const obj = {
           pattern: '坐站训练',
           side: this.affectedSide, // 患侧（左腿、右腿）
-          leftWeightArray: JSON.stringify(this.leftWeightArray), // 左侧负重数组
-          rightWeightArray: JSON.stringify(this.rightWeightArray), // 右侧负重数组
+          leftWeightArray: this.leftWeightArray, // 左侧负重数组
+          rightWeightArray: this.rightWeightArray, // 右侧负重数组
           leftAverageWeight: result.leftAverageWeight, // 左侧负重平均值
           rightAverageWeight: result.rightAverageWeight, // 右侧负重平均值
           leftAverageWeightPercent: result.leftAverageWeightPercent, // 左侧负重平均百分比
           rightAverageWeightPercent: result.rightAverageWeightPercent, // 右侧负重平均百分比
-          leftWeightPercentArray: JSON.stringify(result.leftWeightPercentArray), // 左负重瞬时百分比数组（用于绘制重心移动图形）
-          rightWeightPercentArray: JSON.stringify(
-            result.rightWeightPercentArray
-          ) // 右负重瞬时百分比数组（用于绘制重心移动图形）
+          leftWeightPercentArray: result.leftWeightPercentArray, // 左负重瞬时百分比数组（用于绘制重心移动图形）
+          rightWeightPercentArray: result.rightWeightPercentArray // 右负重瞬时百分比数组（用于绘制重心移动图形）
         }
 
         /* 暂存至 sessionStorage */
