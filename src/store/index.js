@@ -1,8 +1,8 @@
 /*
  * @Author      : Mr.bin
  * @Date        : 2023-04-14 15:23:55
- * @LastEditTime: 2023-06-09 10:46:30
- * @Description : vuex
+ * @LastEditTime: 2023-06-20 16:57:44
+ * @Description : Vuex
  */
 import Vue from 'vue'
 import Vuex from 'vuex'
