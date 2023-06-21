@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2023-06-08 11:37:47
- * @LastEditTime: 2023-06-19 22:31:02
+ * @LastEditTime: 2023-06-21 17:55:29
  * @Description : 动态下蹲测试-具体测量
 -->
 <template>
@@ -109,7 +109,7 @@ export default {
       /* 其他 */
       timeClock: null, // 计时器
       time: this.$store.state.settings[0].time, // 倒计时
-      nowTime: this.$store.state.settings[0].time, // 实时倒计时
+      nowTime: this.$store.state.settings[0].time, // 实时的倒计时
 
       leftK: 0, // 左K
       rightK: 0, // 右K
