@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2023-06-09 16:56:39
- * @LastEditTime: 2023-06-19 22:32:07
+ * @LastEditTime: 2023-07-03 11:22:39
  * @Description : 精准负重训练-具体测量
 -->
 <template>
@@ -426,6 +426,7 @@ export default {
         this.ultimateLoadArr.push(this.ultimateLoad)
         this.downArr.push(parseFloat((this.ultimateLoad - 2.5).toFixed(1)))
       }
+      const resArr = [] // 位移轨迹曲线
       const yesArr = []
       for (let i = 0; i < this.leftWeightArray.length; i++) {
         let core = 0
@@ -450,6 +451,8 @@ export default {
         if (!core) {
           core = 50
         }
+        resArr.push(core)
+
         if (core >= this.downArr[i] && core <= this.upArr[i]) {
           yesArr.push(1)
         }
@@ -472,12 +475,13 @@ export default {
           side: this.affectedSide, // 患侧（左腿、右腿）
           leftWeightArray: this.leftWeightArray, // 左侧负重数组
           rightWeightArray: this.rightWeightArray, // 右侧负重数组
-          upArr: this.upArr, // 上限数组
-          downArr: this.downArr, // 下限数组
+          upArr: this.upArr, // 上限数组（参考曲线）
+          ultimateLoadArr: this.ultimateLoadArr, // 极限值数组（参考曲线）
+          downArr: this.downArr, // 下限数组（参考曲线）
+          resArr: resArr, // 位移轨迹曲线
           ultimateLoad: this.ultimateLoad, // 极限负重百分比%
           time: this.time, // 训练时长
-          record: record, // 完成度%
-          ultimateLoadArr: this.ultimateLoadArr // 曲线图轨迹数组
+          record: record // 完成度%
         }
 
         /* 暂存至 sessionStorage */

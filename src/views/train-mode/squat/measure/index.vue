@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2023-06-09 17:30:05
- * @LastEditTime: 2023-06-19 22:32:57
+ * @LastEditTime: 2023-07-03 11:27:18
  * @Description : 下蹲动作训练-具体测量
 -->
 <template>
@@ -374,6 +374,46 @@ export default {
       settings.shift()
       this.$store.dispatch('setSettings', settings).then(() => {
         /* 数据 */
+        // 计算绿、黄、红的占比
+        let greenArray = []
+        let yellowArray = []
+        let greenPercent = 0
+        let yellowPercent = 0
+        for (let i = 0; i < result.rightWeightPercentArray.length; i++) {
+          if (
+            47.5 <= result.rightWeightPercentArray[i] &&
+            result.rightWeightPercentArray[i] <= 52.5
+          ) {
+            greenArray.push(result.rightWeightPercentArray[i])
+          } else {
+            yellowArray.push(result.rightWeightPercentArray[i])
+          }
+        }
+        greenPercent = parseFloat(
+          (
+            (greenArray.length / result.rightWeightPercentArray.length) *
+            100
+          ).toFixed(1)
+        )
+        yellowPercent = parseFloat(
+          (
+            (yellowArray.length / result.rightWeightPercentArray.length) *
+            100
+          ).toFixed(1)
+        )
+
+        // 绘制的绿、黄、红参考曲线
+        const gl = []
+        const gr = []
+        const yl = []
+        const yr = []
+        for (let i = 0; i < result.rightWeightPercentArray.length; i++) {
+          gl.push(47.5)
+          gr.push(52.5)
+          yl.push(0)
+          yr.push(100)
+        }
+
         const obj = {
           pattern: '下蹲动作训练',
           side: this.affectedSide, // 患侧（左腿、右腿）
@@ -384,7 +424,15 @@ export default {
           leftAverageWeightPercent: result.leftAverageWeightPercent, // 左侧负重平均百分比
           rightAverageWeightPercent: result.rightAverageWeightPercent, // 右侧负重平均百分比
           leftWeightPercentArray: result.leftWeightPercentArray, // 左负重瞬时百分比数组（用于绘制重心移动图形）
-          rightWeightPercentArray: result.rightWeightPercentArray // 右负重瞬时百分比数组（用于绘制重心移动图形）
+          rightWeightPercentArray: result.rightWeightPercentArray, // 右负重瞬时百分比数组（用于绘制重心移动图形）
+          greenArray: greenArray,
+          yellowArray: yellowArray,
+          greenPercent: greenPercent, // 绿的占比值
+          yellowPercent: yellowPercent, // 黄的占比值
+          gl: gl,
+          gr: gr,
+          yl: yl,
+          yr: yr
         }
 
         /* 暂存至 sessionStorage */

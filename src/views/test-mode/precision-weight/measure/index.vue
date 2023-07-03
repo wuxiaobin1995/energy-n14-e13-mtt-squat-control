@@ -1,7 +1,7 @@
 <!--
  * @Author      : Mr.bin
  * @Date        : 2023-04-28 17:17:36
- * @LastEditTime: 2023-06-19 22:31:14
+ * @LastEditTime: 2023-07-03 11:13:47
  * @Description : 精准负重测试-具体测量
 -->
 <template>
@@ -478,7 +478,7 @@ export default {
           const obj = {
             pattern: '精准负重测试',
             side: this.affectedSide, // 患侧（左腿、右腿）
-            dataArray: this.testValueArray, // 测量结果数组，转JSON格式
+            dataArray: this.testValueArray, // 测量结果数组
             ultimateLoad: testResult // 极限负重（kg）
           }
 

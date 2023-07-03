@@ -346,6 +346,65 @@ export default {
       settings.shift()
       this.$store.dispatch('setSettings', settings).then(() => {
         /* 数据 */
+        // 计算绿、黄、红的占比
+        let greenArray = []
+        let yellowArray = []
+        let redArray = []
+        let greenPercent = 0
+        let yellowPercent = 0
+        let redPercent = 0
+        for (let i = 0; i < result.rightWeightPercentArray.length; i++) {
+          if (
+            47.5 <= result.rightWeightPercentArray[i] &&
+            result.rightWeightPercentArray[i] <= 52.5
+          ) {
+            greenArray.push(result.rightWeightPercentArray[i])
+          } else if (
+            (40 <= result.rightWeightPercentArray[i] &&
+              result.rightWeightPercentArray[i] < 47.5) ||
+            (52.5 < result.rightWeightPercentArray[i] &&
+              result.rightWeightPercentArray[i] <= 60)
+          ) {
+            yellowArray.push(result.rightWeightPercentArray[i])
+          } else {
+            redArray.push(result.rightWeightPercentArray[i])
+          }
+        }
+        greenPercent = parseFloat(
+          (
+            (greenArray.length / result.rightWeightPercentArray.length) *
+            100
+          ).toFixed(1)
+        )
+        yellowPercent = parseFloat(
+          (
+            (yellowArray.length / result.rightWeightPercentArray.length) *
+            100
+          ).toFixed(1)
+        )
+        redPercent = parseFloat(
+          (
+            (redArray.length / result.rightWeightPercentArray.length) *
+            100
+          ).toFixed(1)
+        )
+
+        // 绘制的绿、黄、红参考曲线
+        const gl = []
+        const gr = []
+        const yl = []
+        const yr = []
+        const rl = []
+        const rr = []
+        for (let i = 0; i < result.rightWeightPercentArray.length; i++) {
+          gl.push(47.5)
+          gr.push(52.5)
+          yl.push(40)
+          yr.push(60)
+          rl.push(0)
+          rr.push(100)
+        }
+
         const obj = {
           pattern: '站立稳定测试',
           side: this.affectedSide, // 患侧（左腿、右腿）
@@ -355,7 +414,19 @@ export default {
           rightAverageWeight: result.rightAverageWeight, // 右侧负重平均值
           leftAverageWeightPercent: result.leftAverageWeightPercent, // 左侧负重平均百分比
           rightAverageWeightPercent: result.rightAverageWeightPercent, // 右侧负重平均百分比
-          trajectoryArray: result.rightWeightPercentArray // 重心曲线图轨迹数组
+          trajectoryArray: result.rightWeightPercentArray, // 重心曲线图轨迹数组
+          greenArray: greenArray,
+          yellowArray: yellowArray,
+          redArray: redArray,
+          greenPercent: greenPercent, // 绿的占比值
+          yellowPercent: yellowPercent, // 黄的占比值
+          redPercent: redPercent, // 红的占比值
+          gl: gl,
+          gr: gr,
+          yl: yl,
+          yr: yr,
+          rl: rl,
+          rr: rr
         }
 
         /* 暂存至 sessionStorage */
